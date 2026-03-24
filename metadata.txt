@@ -1,0 +1,22 @@
+[general]
+name=GeoDiagnostic
+qgisMinimumVersion=3.16
+description=Automated geospatial environmental diagnostics using Google Earth Engine
+version=1.0.0
+author=Lenin E. Julca
+email=ljulcao_epg19@unc.edu.pe
+about=Plugin for QGIS that generates environmental baseline diagnostics using Google Earth Engine. Calculates topography (SRTM), vegetation and spectral indices (Sentinel-2: NDVI/EVI/SAVI/NDWI/NDMI/NBR/BSI), land cover (Dynamic World 9 classes), precipitation (CHIRPS), temperature (ERA5-Land), soils (SoilGrids: pH/texture/carbon/bulk density), evapotranspiration (MOD16) and erosion risk (RUSLE). Results exported as .tif rasters clipped exactly to the AOI polygon boundary and loaded automatically in QGIS with predefined color palettes. Generates technical PDF report with charts, statistics, AOI vertex coordinate table (WGS84 and UTM), methodology and APA references. REQUIRED DEPENDENCY: earthengine-api (install with: pip install earthengine-api in OSGeo4W Shell or QGIS Python Console). Requires free Gmail account at earthengine.google.com and Google Cloud Project ID with Earth Engine API enabled.
+
+tracker=https://github.com/ljulcaoepg19-gif/geodiagnostic/issues
+repository=https://github.com/ljulcaoepg19-gif/geodiagnostic
+homepage=https://github.com/ljulcaoepg19-gif/geodiagnostic
+
+tags=GEE, google earth engine, remote sensing, teledeteccion, diagnostico ambiental, topography, vegetation, NDVI, EVI, soils, precipitation, raster, land cover, reforestation, erosion, RUSLE, Dynamic World, Sentinel-2, CHIRPS, ERA5, SoilGrids, environmental, baseline, Peru, vertices, coordenadas
+
+icon=icon.png
+experimental=True
+deprecated=False
+server=False
+
+category=Web
+hasProcessingProvider=no
