@@ -258,7 +258,6 @@ https://github.com/ljulcaoepg19-gif/geodiagnostic
 
 **Lenin E. Julca**
 Remote Sensing and GIS Specialist
-Universidad Nacional de Cajamarca, Peru
 
 📧 ljulcao_epg19@unc.edu.pe
 📱 +51 976 742 241

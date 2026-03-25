@@ -516,7 +516,7 @@ class GeoDiagnosticDialog(QDialog):
             'background:transparent;border:none;')
         ca_vl.addWidget(lbl_nombre_a)
 
-        lbl_cargo = QLabel('Ingeniero Forestal  |  Especialista GIS')
+        lbl_cargo = QLabel('Ingeniero Forestal  |  Especialista GIS & Teledetección')
         lbl_cargo.setStyleSheet(
             'font-size:10px;color:#546E7A;background:transparent;border:none;')
         ca_vl.addWidget(lbl_cargo)

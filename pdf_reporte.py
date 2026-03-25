@@ -74,33 +74,33 @@ VERSION = 'GeoDiagnostic v1.0.0'
 # ── Estilos tipográficos ──────────────────────────────────────────────────────
 def _E():
     return {
-        'titulo': ParagraphStyle('titulo', fontName=FNB, fontSize=13,
-            textColor=CV, spaceBefore=10, spaceAfter=4, leading=17),
-        'h2':     ParagraphStyle('h2', fontName=FNB, fontSize=11,
-            textColor=CAZ, spaceBefore=8, spaceAfter=3, leading=14),
-        'h3':     ParagraphStyle('h3', fontName=FNB, fontSize=10,
-            textColor=CGRM, spaceBefore=6, spaceAfter=3, leading=13),
-        'body':   ParagraphStyle('body', fontName=FN, fontSize=10.5,
-            textColor=CGR, spaceBefore=2, spaceAfter=4, leading=15,
+        'titulo': ParagraphStyle('titulo', fontName=FNB, fontSize=15,
+            textColor=CV, spaceBefore=10, spaceAfter=4, leading=19),
+        'h2':     ParagraphStyle('h2', fontName=FNB, fontSize=12,
+            textColor=CAZ, spaceBefore=8, spaceAfter=3, leading=16),
+        'h3':     ParagraphStyle('h3', fontName=FNB, fontSize=11,
+            textColor=CGRM, spaceBefore=6, spaceAfter=3, leading=14),
+        'body':   ParagraphStyle('body', fontName=FN, fontSize=11,
+            textColor=CGR, spaceBefore=2, spaceAfter=4, leading=16,
             alignment=TA_JUSTIFY),
-        'nota':   ParagraphStyle('nota', fontName=FNI, fontSize=8.5,
-            textColor=CGRL, spaceBefore=2, spaceAfter=3, leading=12,
+        'nota':   ParagraphStyle('nota', fontName=FNI, fontSize=9.5,
+            textColor=CGRL, spaceBefore=2, spaceAfter=3, leading=13,
             leftIndent=8),
-        'tabla_h':ParagraphStyle('tabla_h', fontName=FNB, fontSize=9,
-            textColor=BL, leading=12),
-        'tabla_v':ParagraphStyle('tabla_v', fontName=FN, fontSize=9.5,
-            textColor=CGR, leading=13),
-        'tabla_vb':ParagraphStyle('tabla_vb', fontName=FNB, fontSize=9.5,
-            textColor=CAZ, leading=13),
+        'tabla_h':ParagraphStyle('tabla_h', fontName=FNB, fontSize=10,
+            textColor=BL, leading=13),
+        'tabla_v':ParagraphStyle('tabla_v', fontName=FN, fontSize=10,
+            textColor=CGR, leading=14),
+        'tabla_vb':ParagraphStyle('tabla_vb', fontName=FNB, fontSize=10,
+            textColor=CAZ, leading=14),
         'kpi_val':ParagraphStyle('kpi_val', fontName=FNB, fontSize=20,
             textColor=CGR, leading=24, alignment=TA_CENTER),
-        'kpi_lbl':ParagraphStyle('kpi_lbl', fontName=FN, fontSize=8.5,
-            textColor=CGRL, leading=12, alignment=TA_CENTER),
-        'kpi_est':ParagraphStyle('kpi_est', fontName=FNB, fontSize=8,
-            textColor=CV, leading=10, alignment=TA_CENTER),
-        'centro': ParagraphStyle('centro', fontName=FN, fontSize=9.5,
+        'kpi_lbl':ParagraphStyle('kpi_lbl', fontName=FN, fontSize=9.5,
+            textColor=CGRL, leading=13, alignment=TA_CENTER),
+        'kpi_est':ParagraphStyle('kpi_est', fontName=FNB, fontSize=9,
+            textColor=CV, leading=11, alignment=TA_CENTER),
+        'centro': ParagraphStyle('centro', fontName=FN, fontSize=10,
             textColor=CGR, alignment=TA_CENTER),
-        'fig_cap':ParagraphStyle('fig_cap', fontName=FNI, fontSize=8.5,
+        'fig_cap':ParagraphStyle('fig_cap', fontName=FNI, fontSize=9,
             textColor=CGRL, alignment=TA_CENTER, spaceBefore=2, spaceAfter=6),
     }
 
@@ -222,54 +222,77 @@ def grafico_barras(datos, titulo, subtitulo='', ancho=14*cm, alto=6*cm, eje_y_la
     """datos: [(label, valor, color_hex), ...]"""
     if not datos: return Spacer(1, 0.5*cm)
     PAL = ['#1B5E20','#0D47A1','#B71C1C','#E65100','#4A148C','#006064','#F57F17','#880E4F']
-    d   = Drawing(ancho, alto + 2.2*cm)
-    BX  = 68; BY = 32; BH = alto - 30
+    d      = Drawing(ancho, alto + 2.8*cm)
+    BX     = 68; BH = alto - 50
     BW_tot = ancho - BX - 12
-    n   = len(datos)
-    bw  = min(BW_tot / max(n, 1) * 0.65, 38)
-    gap = BW_tot / max(n, 1) * 0.35
-    vals = [float(v) for _, v, *_ in datos]
-    mx   = max(vals) if vals else 1
-    if mx == 0: mx = 1
+    n      = len(datos)
+    bw     = min(BW_tot / max(n, 1) * 0.65, 38)
+    gap    = BW_tot / max(n, 1) * 0.35
+    vals   = [float(v) for _, v, *_ in datos]
+    mx     = max(vals) if vals else 1
+    mn     = min(vals) if vals else 0
 
-    # Líneas guía horizontales
-    for tk in [0.25, 0.5, 0.75, 1.0]:
-        y = BY + BH * tk
-        tv = mx * tk
-        d.add(Line(BX, y, BX + BW_tot, y,
-                   strokeColor=colors.HexColor('#E0E0E0'), strokeWidth=0.5))
-        lbl = f'{tv:.1f}' if tv < 100 else f'{int(tv)}'
-        d.add(String(BX - 5, y - 3.5, lbl,
-                     fontSize=6.5, fontName=FN, fillColor=CGRL, textAnchor='end'))
+    # Si hay negativos (ej. BSI) → cero centrado
+    tiene_neg = mn < -0.01
+    if tiene_neg:
+        span = max(abs(mx), abs(mn)) * 1.25 or 1
+        BY   = 32 + BH * abs(mn) / (abs(mx) + abs(mn) or 1)
+    else:
+        span = mx * 1.15 if mx > 0 else 1
+        BY   = 32
 
-    # Eje Y
-    d.add(Line(BX, BY, BX, BY + BH, strokeColor=CGRL, strokeWidth=0.6))
-    # Eje X
-    d.add(Line(BX, BY, BX + BW_tot, BY, strokeColor=CGRL, strokeWidth=0.6))
+    def bh_from_val(v):
+        if tiene_neg:
+            return BH * float(v) / (abs(mx) + abs(mn) or 1)
+        else:
+            return BH * float(v) / span
+
+    # Líneas guía
+    guide_tks = [-0.75,-0.5,-0.25,0,0.25,0.5,0.75,1.0] if tiene_neg else [0.25,0.5,0.75,1.0]
+    for tk in guide_tks:
+        if tiene_neg:
+            y  = BY + BH * tk
+            tv = (abs(mx)+abs(mn)) * tk
+        else:
+            y  = BY + BH * tk
+            tv = span * tk
+        if 28 < y < BY + BH + 4:
+            d.add(Line(BX, y, BX+BW_tot, y,
+                       strokeColor=colors.HexColor('#E0E0E0'), strokeWidth=0.5))
+            lbl = f'{tv:.2f}' if abs(tv)<1 else (f'{tv:.1f}' if abs(tv)<100 else f'{int(tv)}')
+            d.add(String(BX-5, y-3.5, lbl,
+                         fontSize=6.5, fontName=FN, fillColor=CGRL, textAnchor='end'))
+
+    d.add(Line(BX, 32, BX, 32+BH, strokeColor=CGRL, strokeWidth=0.6))
+    d.add(Line(BX, BY, BX+BW_tot, BY, strokeColor=CGRL, strokeWidth=0.6))
+    if tiene_neg:
+        d.add(Line(BX, BY, BX+BW_tot, BY,
+                   strokeColor=colors.HexColor('#90A4AE'), strokeWidth=1.0))
 
     for i, item in enumerate(datos):
         lbl = item[0]; val = float(item[1])
-        col = colors.HexColor(item[2]) if len(item) > 2 else colors.HexColor(PAL[i % len(PAL)])
-        bx_i = BX + i * (bw + gap) + gap/2
-        bh_i = max(BH * val / mx, 1)
-        # Barra
-        d.add(Rect(bx_i, BY, bw, bh_i, fillColor=col, strokeColor=None, rx=2))
-        # Valor encima
-        vs = f'{val:.2f}' if val < 1 else (f'{val:.1f}' if val < 100 else f'{int(val)}')
-        d.add(String(bx_i + bw/2, BY + bh_i + 3, vs,
-                     fontSize=6.5, fontName=FNB, fillColor=CGRM, textAnchor='middle'))
-        # Etiqueta eje X
-        d.add(String(bx_i + bw/2, BY - 10, lbl[:14],
+        col  = colors.HexColor(item[2]) if len(item)>2 else colors.HexColor(PAL[i%len(PAL)])
+        bx_i = BX + i*(bw+gap) + gap/2
+        bh_i = bh_from_val(val)
+        rect_y = BY if val >= 0 else BY + bh_i
+        rect_h = max(abs(bh_i), 1)
+        d.add(Rect(bx_i, rect_y, bw, rect_h, fillColor=col, strokeColor=None, rx=2))
+
+        vs = f'{val:.2f}' if abs(val)<1 else (f'{val:.1f}' if abs(val)<100 else f'{int(val)}')
+        nudge  = max(5, rect_h*0.10)
+        lbl_y  = rect_y + rect_h + nudge if val >= 0 else rect_y - nudge - 8
+        d.add(String(bx_i+bw/2, lbl_y, vs,
+                     fontSize=7, fontName=FNB, fillColor=CGRM, textAnchor='middle'))
+        d.add(String(bx_i+bw/2, 18, lbl[:14],
                      fontSize=6.5, fontName=FN, fillColor=CGRM, textAnchor='middle'))
 
-    # Título
-    d.add(String(ancho/2, alto + 14, titulo,
+    d.add(String(ancho/2, alto+24, titulo,
                  fontSize=9.5, fontName=FNB, fillColor=CGR, textAnchor='middle'))
     if subtitulo:
-        d.add(String(ancho/2, alto + 5, subtitulo,
+        d.add(String(ancho/2, alto+13, subtitulo,
                      fontSize=7.5, fontName=FNI, fillColor=CGRL, textAnchor='middle'))
     if eje_y_label:
-        d.add(String(8, BY + BH/2, eje_y_label,
+        d.add(String(8, 32+BH/2, eje_y_label,
                      fontSize=7, fontName=FNI, fillColor=CGRL, textAnchor='middle'))
     return d
 
@@ -337,6 +360,119 @@ def grafico_lineas(datos, titulo, subtitulo='', ancho=14*cm, alto=5.5*cm,
                  fontSize=9.5, fontName=FNB, fillColor=CGR, textAnchor='middle'))
     if subtitulo:
         d.add(String(ancho/2, alto + 4, subtitulo,
+                     fontSize=7.5, fontName=FNI, fillColor=CGRL, textAnchor='middle'))
+    return d
+
+# ── Gráfica multiserie — evolución mensual de los 7 índices espectrales ───────
+def grafico_multiserie_indices(res, titulo, subtitulo='', ancho=14*cm, alto=6*cm):
+    """
+    res: dict de resultados['vegetacion'] con claves NDVI_Mes_01..12, etc.
+    Dibuja 7 líneas de colores (una por índice) sobre 12 meses.
+    """
+    INDICES = ['NDVI','EVI','SAVI','NDWI','NDMI','NBR','BSI']
+    COLORES = ['#1B5E20','#0D47A1','#388E3C','#1565C0','#6A1B9A','#00695C','#BF360C']
+    MESES   = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
+    LEGEND_W = 2.8*cm
+    d        = Drawing(ancho, alto + 2.5*cm)
+    BX = 55; BY = 28; BH = alto - 22
+    BW = ancho - BX - LEGEND_W - 8
+
+    # Recopilar datos mensuales por índice
+    series = {}
+    for idx in INDICES:
+        vals = []
+        for m in range(1, 13):
+            v = res.get(f'{idx}_Mes_{m:02d}', None)
+            vals.append(float(v) if v is not None else None)
+        series[idx] = vals
+
+    # Rango global (ignorar None)
+    all_v = [v for vs in series.values() for v in vs if v is not None]
+    if not all_v:
+        return Spacer(1, 0.5*cm)
+    mn_g = min(all_v); mx_g = max(all_v)
+    rng  = mx_g - mn_g if mx_g != mn_g else 1
+    mn_g -= rng * 0.08
+    mx_g += rng * 0.08
+    rng   = mx_g - mn_g
+
+    def ys(v):
+        return BY + BH * (float(v) - mn_g) / rng
+
+    # Líneas guía + línea de cero si aplica
+    for tk in [0, 0.25, 0.5, 0.75, 1.0]:
+        y  = BY + BH * tk
+        tv = mn_g + rng * tk
+        d.add(Line(BX, y, BX+BW, y,
+                   strokeColor=colors.HexColor('#EEEEEE'), strokeWidth=0.5))
+        lbl = f'{tv:.2f}' if abs(tv) < 1 else f'{tv:.1f}'
+        d.add(String(BX-4, y-3.5, lbl,
+                     fontSize=6, fontName=FN, fillColor=CGRL, textAnchor='end'))
+    # Línea de cero destacada
+    if mn_g < 0 < mx_g:
+        y0 = ys(0)
+        d.add(Line(BX, y0, BX+BW, y0,
+                   strokeColor=colors.HexColor('#90A4AE'), strokeWidth=0.8))
+
+    # Ejes
+    d.add(Line(BX, BY, BX, BY+BH, strokeColor=CGRL, strokeWidth=0.6))
+    d.add(Line(BX, BY, BX+BW, BY, strokeColor=CGRL, strokeWidth=0.6))
+
+    # Etiquetas eje X
+    for i, mes in enumerate(MESES):
+        x = BX + i * BW / 11
+        d.add(String(x, BY-10, mes,
+                     fontSize=6.5, fontName=FN, fillColor=CGRM, textAnchor='middle'))
+
+    # Dibujar una línea por índice
+    for idx, col_hex in zip(INDICES, COLORES):
+        col  = colors.HexColor(col_hex)
+        vals = series[idx]
+        pts  = []
+        for i, v in enumerate(vals):
+            if v is not None:
+                x = BX + i * BW / 11
+                y = ys(v)
+                pts.append((x, y))
+
+        # Dibujar segmentos (omite los None sin romper)
+        seg = []
+        for i, v in enumerate(vals):
+            if v is not None:
+                seg.append((BX + i*BW/11, ys(v)))
+            else:
+                if len(seg) >= 2:
+                    lp = []
+                    for px, py in seg:
+                        lp += [px, py]
+                    d.add(PolyLine(lp, strokeColor=col, strokeWidth=1.4))
+                seg = []
+        if len(seg) >= 2:
+            lp = []
+            for px, py in seg:
+                lp += [px, py]
+            d.add(PolyLine(lp, strokeColor=col, strokeWidth=1.4))
+
+        # Puntos
+        for x, y in pts:
+            d.add(Circle(x, y, 2.2, fillColor=BL,
+                         strokeColor=col, strokeWidth=1.0))
+
+    # Leyenda lateral derecha
+    ley_x = BX + BW + 8
+    ley_y = BY + BH - 4
+    for idx, col_hex in zip(INDICES, COLORES):
+        col = colors.HexColor(col_hex)
+        d.add(Rect(ley_x, ley_y, 10, 6, fillColor=col, strokeColor=None, rx=1))
+        d.add(String(ley_x+13, ley_y, idx,
+                     fontSize=7, fontName=FNB, fillColor=CGR, textAnchor='start'))
+        ley_y -= 11
+
+    # Título
+    d.add(String(ancho/2, alto+22, titulo,
+                 fontSize=9.5, fontName=FNB, fillColor=CGR, textAnchor='middle'))
+    if subtitulo:
+        d.add(String(ancho/2, alto+12, subtitulo,
                      fontSize=7.5, fontName=FNI, fillColor=CGRL, textAnchor='middle'))
     return d
 
@@ -763,7 +899,7 @@ def _fn_pagina(canvas, doc, nombre_proy):
     canvas.setStrokeColor(colors.HexColor('#CFD8DC')); canvas.setLineWidth(0.5)
     canvas.line(2*cm, 1.6*cm, W-2*cm, 1.6*cm)
     canvas.setFont('Helvetica', 7.5); canvas.setFillColor(CGRL)
-    canvas.drawString(2*cm,   0.9*cm, f'{AUTOR}  |  {CORREO}')
+    canvas.drawString(2*cm, 0.9*cm, f'{AUTOR}  |  Especialista GIS & Teledetección')
     canvas.drawRightString(W-2*cm, 0.9*cm, f'Página {doc.page - 1}')
     canvas.restoreState()
 
@@ -1137,6 +1273,64 @@ def generar_reporte(ruta_salida, nombre_proy, resultados, datos_ficha,
             'Caja: rango intercuartil (P25–P75). Línea: mediana. Punto: media. '
             'Bigotes: rango completo (mín.–máx.).'))
         sp(0.3)
+
+        # ── Análisis multitemporal — evolución mensual de los 7 índices ──────
+        _meses_idx = {idx: [res.get(f'{idx}_Mes_{m:02d}', None)
+                             for m in range(1,13)] for idx in INDICES}
+        _tiene_datos_mensuales = any(
+            v is not None for vs in _meses_idx.values() for v in vs)
+
+        if _tiene_datos_mensuales:
+            pag()
+            h2('Análisis multitemporal — Evolución mensual de índices espectrales')
+            p('La siguiente gráfica muestra la evolución mensual de los siete índices '
+              'espectrales calculados sobre el área de interés. Cada línea representa '
+              'el valor medio del índice para todas las imágenes Sentinel-2 disponibles '
+              f'en ese mes (filtro: nubosidad < 20%). Período: {per}.')
+            sp(0.25)
+            H.append(grafico_multiserie_indices(
+                res,
+                'Evolución mensual de los 7 índices espectrales',
+                subtitulo=f'Sentinel-2 SR — Mediana mensual — Período: {per}',
+                ancho=14*cm, alto=6.5*cm))
+            H.append(fig_caption(
+                'Evolución temporal mensual de los índices espectrales sobre el AOI. '
+                'Cada punto representa la mediana del mes. Los valores None indican '
+                'meses sin imágenes disponibles por cobertura nubosa.'))
+            sp(0.3)
+
+            # Heatmap mensual de NDVI
+            _ndvi_mes = [res.get(f'NDVI_Mes_{m:02d}', None) for m in range(1,13)]
+            _ndvi_vals = [float(v) if v is not None else 0.0 for v in _ndvi_mes]
+            if any(v > 0 for v in _ndvi_vals):
+                H.append(tabla_heatmap_meses(
+                    _ndvi_vals, '',
+                    'NDVI mensual',
+                    color_max='#1B5E20', color_min='#F1F8E9'))
+                H.append(tab_caption(
+                    'NDVI mensual sobre el AOI. '
+                    'Verde intenso: mayor cobertura vegetal. '
+                    'Verde claro: menor cobertura o meses sin datos.'))
+                sp(0.2)
+
+            # Mini-tabla resumen con medias mensuales de todos los índices
+            MESES_NOM = ['Ene','Feb','Mar','Abr','May','Jun',
+                         'Jul','Ago','Sep','Oct','Nov','Dic']
+            _filas_mt = []
+            for idx in INDICES:
+                fila = [idx]
+                for m in range(1, 13):
+                    v = res.get(f'{idx}_Mes_{m:02d}', None)
+                    fila.append(f'{float(v):.3f}' if v is not None else '—')
+                _filas_mt.append(fila)
+            H.append(tabla_booktabs(
+                _filas_mt,
+                headers=['Índice'] + MESES_NOM,
+                col_w=[1.4*cm] + [1.05*cm]*12))
+            H.append(tab_caption(
+                'Valores medios mensuales de los 7 índices espectrales. '
+                '"—" indica mes sin imágenes disponibles.'))
+            sp(0.3)
 
         # Semáforo NDVI
         nd = float(res.get('NDVI medio',0) or 0)

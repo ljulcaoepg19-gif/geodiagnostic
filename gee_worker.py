@@ -207,6 +207,34 @@ class GeeWorker(QThread):
                         res[f'{idx} p75']    = round(st.get(f'{idx}_p75',    0) or 0, 4)
                         res[f'{idx} p90']    = round(st.get(f'{idx}_p90',    0) or 0, 4)
                         res[f'{idx} count']  = int(st.get(f'{idx}_count',    0) or 0)
+                    # ── Serie mensual de los 7 índices ───────────────────────
+                    # Calcula valor medio de cada índice por mes del período
+                    # Una sola llamada GEE por mes (todas las bandas juntas)
+                    for m in range(1, 13):
+                        try:
+                            col_m = col_s2.filter(
+                                ee.Filter.calendarRange(m, m, 'month'))
+                            n_imgs = col_m.size().getInfo()
+                            if n_imgs == 0:
+                                # Sin imágenes ese mes — marcar como None
+                                for idx in indices:
+                                    res[f'{idx}_Mes_{m:02d}'] = None
+                            else:
+                                s2_m = col_m.map(add_indices).median()
+                                st_m = s2_m.select(indices).reduceRegion(
+                                    ee.Reducer.mean(),
+                                    geometry=aoi, scale=sc,
+                                    maxPixels=1e13, bestEffort=True
+                                ).getInfo()
+                                for idx in indices:
+                                    v = st_m.get(f'{idx}_mean',
+                                        st_m.get(idx, None))
+                                    res[f'{idx}_Mes_{m:02d}'] = (
+                                        round(float(v), 4) if v is not None else None)
+                        except Exception:
+                            for idx in indices:
+                                res[f'{idx}_Mes_{m:02d}'] = None
+
                     urls = '|||'.join([
                         self._url(s2.select('NDVI'), aoi, sc, f'{NM}_NDVI'),
                         self._url(s2.select('EVI'),  aoi, sc, f'{NM}_EVI'),
