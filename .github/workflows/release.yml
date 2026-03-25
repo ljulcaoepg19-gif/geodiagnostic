@@ -1,0 +1,57 @@
+name: Release GeoDiagnostic
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install qgis-plugin-ci
+        run: pip install qgis-plugin-ci
+
+      - name: Get version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+
+      - name: Package plugin
+        run: |
+          qgis-plugin-ci package ${{ steps.version.outputs.VERSION }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: "GeoDiagnostic ${{ github.ref_name }}"
+          body: |
+            ## GeoDiagnostic ${{ github.ref_name }}
+            Instala desde QGIS → Complementos → Instalar desde ZIP
+          files: |
+            geodiagnostic.${{ steps.version.outputs.VERSION }}.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy to QGIS Plugin Repository
+        run: |
+          qgis-plugin-ci release ${{ steps.version.outputs.VERSION }} \
+            --osgeo-username ${{ secrets.OSGEO_USER_NAME }} \
+            --osgeo-password ${{ secrets.OSGEO_USER_PASSWORD }}
+        env:
+          OSGEO_USER_NAME: ${{ secrets.OSGEO_USER_NAME }}
+          OSGEO_USER_PASSWORD: ${{ secrets.OSGEO_USER_PASSWORD }}
+```
+
+4. Commit message:
+```
+Add GitHub Actions release workflow
